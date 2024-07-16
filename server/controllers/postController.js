@@ -1,49 +1,31 @@
-// CRUD functions for the DB using the Post Model
-const Post = require('../models/postsModel')
-const deleteFile = require('../utils/deleteFiles')
+const Post = require('../models/postModel')
+const deleteFile = require('../utils/deleteFile')
+//CREATE
+//@desc    create a post
+//@route   POST /posts
+//access   Public
 
-// @desc    Gets All Posts
-// @route   GET /posts
-// access   Public
-const getAllPosts = async (req,res) => {
-    try {
-        const posts = await Post.find()
-
-        res.status(200).json(posts)
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-// @desc    Create a Post
-// @route   POST /posts
-// access   Public
-const createPost = async (req, res) => {
-    // Check if req.body exists
-    if (!req.body) {
-        res.status(400).json({ error: 'No request body'})
+const createPost = async (req, res) =>{
+    if (!req.body){
+        res.status(400).json({error: 'No request body'})
     }
 
-    // Get the fields from req.body
-    const { title, author, content } = req.body
+    const {title, author, content } = req.body //destructure
 
-    // Optionally check if req.file exists 
-    const path = req.file?.path ?? null
+    //const {path} = req.file
+    const path = req.file?.path ?? null //so cover photo is optional
+    
 
     try {
-        // Instantiate new Post
         const post = new Post({
             title,
             author,
             content,
-            cover_photo: path
         })
 
-        // Save Post
         const newPost = await post.save()
 
-        if (newPost) {
-            // Return Created Post
+        if (newPost){
             res.status(201).json(newPost)
         }
     } catch (error) {
@@ -51,96 +33,115 @@ const createPost = async (req, res) => {
         res.status(422).json(error)
     }
 }
+//READ
+//@desc    Get all posts
+//@route   Get /posts
+//access   Public
 
-// @desc    Update a Post
-// @route   PUT/PATCH /posts/:id
-// access   Public
-const updatePost = async (req, res) => {
-    // Check if req.body exists
-    if (!req.body) {
-        res.status(400).json({ error: 'No request body'})
+const getAllPosts = async (req, res) => {
+    try {
+        const posts = await Post.find() //no param will return everything
+
+        res.json(posts)
+    } catch (error) {
+        console.log('error')
+    }
+}
+
+//READ
+//@desc    Get specified posts
+//@route   Get /posts/:id
+//access   Public
+
+const showPost = async (req, res) => {
+    try {
+        const {id} = req.params
+
+        const post = await Post.findById(id) //no param will return everything
+
+        if (!post){
+            res.status(404).json({error: 'post not found'})
+        }
+
+        res.json(post)
+    } catch (error) {
+        console.log('error')
+    }
+}
+
+//UPDATE
+//@desc    update a post
+//@route   put/patch /posts/:id ==> patch = kung ano nilagay yun lng iibahin
+//access   Public
+const updatePost = async (req, res) =>{
+    if (!req.body){
+        res.status(400).json({error: 'No request body'})
     }
 
     const { id } = req.params
+    const { title, author, content } = req.body //destructure
 
-    // Get the fields from req.body
-    const { title, author, content } = req.body
-
-    // Optionally check if req.file exists 
-    const path = req.file?.path ?? null
-
+    //const {path} = req.file
+    const path = req.file?.path ?? null //so cover photo is optional
+    
     try {
-        const originalPost = await Post.findById(id);
-
-        if (!originalPost) {
-            res.status(404).json({ 'error': 'Post not found '})
+        // find the post
+        const originalPost = await Post.findById(id)
+        // if no post, return
+        if (!originalPost){
+            return res.status(404).json({error: 'Original post not found'})
         }
-        
-        // Only delete Previous Cover Photo if there's a newly uploaded file
-        if (originalPost.cover_photo && path) {
+        // ? handle deleting of previous photos
+        // only delete previous photo if there is a new uploaded file
+        if (originalPost.cover_photo && path){
             deleteFile(originalPost.cover_photo)
         }
 
-        // Update the fields of the original Document
+        // update fields of original post
         originalPost.title = title
         originalPost.author = author
-        originalPost.content = content 
+        originalPost.content = content
         originalPost.cover_photo = path
 
-        // Save Post
+        // save post
         const updatedPost = await originalPost.save()
 
+        // return
         res.status(200).json(updatedPost)
+
     } catch (error) {
         console.log(error)
         res.status(422).json(error)
     }
 }
-
-// @desc    Show specified Post
-// @route   GET /posts/:id
-// access   Public
-const showPost = async (req,res) => {
+//DELETE
+//@desc    delete a post
+//@route   DEL /posts/:id
+//access   Public
+const deletePost = async (req, res) => {
     try {
-        const { id } = req.params
+        const {id} = req.params
 
-        const post = await Post.findById(id)
+        const post = await Post.findByIdAndDelete(id) //no param will return everything
 
-        if (!post) {
-            res.status(404).json({ 'error': 'Post not found '})
+        if (!post){
+            res.status(404).json({error: 'post not found'})
         }
 
-        res.status(200).json(post)
-    } catch (error) {
-        console.log(error)
-        res.status(404).json({ 'error': 'Post not found '})
-    }
-}
-
-// @desc    Delete specified Post
-// @route   DEL /posts/:id
-// access   Public
-const deletePost = async (req,res) => {
-    try {
-        const { id } = req.params
-
-        const post = await Post.findByIdAndDelete(id)
-
-        if (!post) {
-            res.status(404).json({ 'error': 'Post not found '})
+        if (post.cover_photo){
+            deleteFile(post.cover_photo)
         }
 
-        res.status(200).json({message: 'Successfully deleted post!'})
+        res.status(200).json({message: "Successfully deleted post"})
+
     } catch (error) {
-        console.log(error)
-        res.status(404).json({ 'error': 'Post not found '})
+        console.log('error')
     }
 }
-
 module.exports = {
-    getAllPosts,
+    getAllPosts, //export the function
     createPost,
-    showPost,
     updatePost,
-    deletePost
+    deletePost,
+    showPost    
 }

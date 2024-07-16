@@ -10,16 +10,16 @@ const postSchema = mongoose.Schema({
     },
     content: {
         type: String,
-        required: [true, 'Please add content']
+        required: [true, 'Please add a content']
     },
     cover_photo: {
-        type: String
+        type: String, //image path
     },
     date: {
         type: Date,
         default: Date.now()
     }
+
 })
 
-// Create Model for Posts
 module.exports = mongoose.model('Post', postSchema)

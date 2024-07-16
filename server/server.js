@@ -1,26 +1,30 @@
 require('dotenv').config();
-const express = require('express');
+const express = require('express'); //method, no path kasi asa node modules
 const app = express();
 const connectDb = require('./config/db');
-const { errorHandler } = require('./middleware/errorMiddleware')
+const {errorHandler} = require('./middleware/errorMiddleware')
 
-
+// connecting to database
 connectDb();
 
-// Serve static files from the public directory
+// serve static files from public directory
 app.use(express.static('public'))
 
-app.get('/', (req, res) => {
-    res.status(200).json({message: "Hello AWSCC"});
+app.get('/AWS',(req, res) => { // yung '/' ang route o directory na mag didisplay, ang '/' ay nasa localhost:5001/AWS lang
+  res.status(200).json({message: "Hello AWSCCC"}); //standard
+
 })
 
-// Post Routes
+// post routes:
 const postRouter = require('./routers/postRouter')
-app.use('/posts', postRouter)
+app.use('/posts', postRouter) 
 
-// Use Error Middleware
+// use error middleware
 app.use(errorHandler)
 
-app.listen(8080, () => {
-    console.log('Server is running in port 8080');
-});
+//set up port
+app.listen(5001, () => {
+  console.log('Server is running in port 5001');
+})
+
+
