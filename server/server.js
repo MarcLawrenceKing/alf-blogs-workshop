@@ -1,9 +1,12 @@
+const cors = require('cors');
+
 require('dotenv').config();
 const express = require('express'); //method, no path kasi asa node modules
 const app = express();
 const connectDb = require('./config/db');
 const {errorHandler} = require('./middleware/errorMiddleware')
 
+app.use(cors());
 // connecting to database
 connectDb();
 
